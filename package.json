@@ -1,0 +1,35 @@
+{
+  "name": "adhoc-doc-api",
+  "version": "1.0.0",
+  "description": "RESTful API for schema-based doc service",
+  "scripts": {
+    "dev:server": "nodemon ./bin/start --inspect",
+    "start": "npm-run-all -p dev:*",
+    "lint": "eslint ./"
+  },
+  "author": "Adam Davis <adam@admataz.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@sindresorhus/slugify": "^0.6.0",
+    "fastify": "^2.0.0-RC1",
+    "fastify-file-upload": "^1.0.0",
+    "fastify-mongodb": "^1.0.0",
+    "fastify-multipart": "^0.5.1",
+    "http-errors": "^1.7.1",
+    "lodash": "^4.17.11",
+    "mongodb": "^3.1.10",
+    "papaparse": "^4.6.2"
+  },
+  "devDependencies": {
+    "body-parser": "^1.18.3",
+    "chai": "^4.2.0",
+    "chance": "^1.0.17",
+    "eslint": "^5.9.0",
+    "eslint-config-standard": "^12.0.0",
+    "eslint-plugin-node": "^8.0.0",
+    "eslint-plugin-standard": "^4.0.0",
+    "mocha": "^5.2.0",
+    "nodemon": "^1.18.7",
+    "npm-run-all": "^4.1.5"
+  }
+}
