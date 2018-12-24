@@ -1,2 +1,3 @@
 const server = require('../server')
-server.start()
+  server.init()
+  server.start()
