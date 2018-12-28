@@ -19,7 +19,7 @@ function init () {
 }
 
 function start () {
-  fastify.listen(config.server.PORT || 3001, err => {
+  fastify.listen(config.server.port || 3001, err => {
     if (err) throw err
     console.log(`server listening on ${fastify.server.address().port}`)
   })

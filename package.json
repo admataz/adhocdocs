@@ -6,13 +6,13 @@
     "dev:server": "nodemon ./bin/start --inspect",
     "start": "npm-run-all -p dev:*",
     "lint": "eslint ./",
-    "test": "mocha ./test/**/*.test.js"
+    "test": "mocha -r ./test/support/env"
   },
   "author": "Adam Davis <adam@admataz.com>",
   "license": "MIT",
   "dependencies": {
     "@sindresorhus/slugify": "^0.6.0",
-    "fastify": "^1.13.3",
+    "fastify": "^2.0.0-rc.3",
     "fastify-env": "^0.6.1",
     "fastify-file-upload": "^1.0.0",
     "fastify-mongodb": "^1.0.0",
@@ -29,6 +29,7 @@
     "eslint": "^5.10.0",
     "eslint-config-standard": "^12.0.0",
     "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-mocha": "^5.2.0",
     "eslint-plugin-node": "^8.0.0",
     "eslint-plugin-promise": "^4.0.1",
     "eslint-plugin-standard": "^4.0.0",
@@ -36,6 +37,12 @@
     "nodemon": "^1.18.9",
     "npm-run-all": "^4.1.5",
     "request": "^2.88.0",
+    "semver": "^5.6.0",
     "standard": "^12.0.1"
+  },
+  "standard": {
+    "env": [
+      "mocha"
+    ]
   }
 }

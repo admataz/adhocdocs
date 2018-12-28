@@ -9,7 +9,9 @@ const slugify = require('@sindresorhus/slugify')
 const papaparse = require('papaparse')
 const fileUpload = require('fastify-file-upload')
 
+const { db: { collections: { documents: DOCUMENTS_COLLECTION_NAME } } } = require('../../../config')
 const dbConnector = require('./queries')
+
 const schema = {
   body: {
     type: 'object',
@@ -35,7 +37,6 @@ const schema = {
 }
 
 module.exports = (f, options, next) => {
-  const DOCUMENTS_COLLECTION_NAME = 'documents'
   const { db, ObjectId } = f.mongo
   f.decorate('docsDb', dbConnector(db, DOCUMENTS_COLLECTION_NAME))
   f.register(fileUpload)

@@ -5,6 +5,6 @@ module.exports = function (fastify, opts, next) {
   })
 
   // register routes
-  fastify.register(require('./api'), { prefix: '/api/v1' })
+  fastify.register(require('./api'), { prefix: '/api' })
   next()
 }

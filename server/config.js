@@ -2,7 +2,11 @@ require('dotenv').config()
 
 const conf = {
   db: {
-    connect: process.env.DB_CONNECT || 'mongodb://localhost/adhocdocs'
+    connect: process.env.DB_CONNECT || 'mongodb://localhost/adhocdocs',
+    collections: {
+      schema: process.env.DB_COLLECTION_NAME_SCHEMA || 'schema',
+      documents: process.env.DB_COLLECTION_NAME_DOCUMENTS || 'documents'
+    }
   },
   server: {
     logging: process.env.LOG_LEVEL ? { level: process.env.LOG_LEVEL } : false,

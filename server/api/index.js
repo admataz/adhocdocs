@@ -1,13 +1,13 @@
-/**
- * The root API
- */
-module.exports = async function (fastify, options, next) {
-  fastify.get('/', function (req, reply) {
+
+module.exports = function (fastify, opts, next) {
+  fastify.get('/', (req, reply) => {
     reply.send({ hello: 'world' })
   })
 
-  fastify.register(require('./content'), { prefix: '/content' })
-  fastify.register(require('./schema'), { prefix: '/schema' })
+  fastify.get('/health', (req, reply) => {
+    reply.send('ok')
+  })
 
+  fastify.register(require('./v1'), { prefix: '/v1' })
   next()
 }

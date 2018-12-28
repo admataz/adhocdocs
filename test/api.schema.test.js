@@ -1,4 +1,5 @@
-const fastify = require('../../server').fastify
+const { fastify, init } = require('../server')
+const { expect } = require('chai')
 
 describe('create new schema', () => {
   it('should create a new schema', () => {
@@ -18,6 +19,7 @@ describe('create new schema', () => {
       },
       'required': ['name']
     }
+    init()
 
     fastify.inject({
       url: '/api/v1/schema',
@@ -30,7 +32,7 @@ describe('create new schema', () => {
       if (err) {
         console.log(err.message)
       }
-      expect(res.statusCode).toEqual(200)
+      expect(res.statusCode).equal(200)
       // console.log(res)
     })
   })
