@@ -5,7 +5,7 @@ const { server: config } = require('../server/config')
 
 const baseUrl = `http://localhost:${config.port}`
 
-describe.only('http server', () => {
+describe('http server', () => {
   it('server should be running at configured port ', done => {
     request.get(baseUrl, (err, response, body) => {
       if (err) throw (err)

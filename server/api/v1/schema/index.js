@@ -9,6 +9,8 @@
  *
  */
 
+// const schemaschema = require('./validate-schema')
+
 module.exports = function (fastify, opts, next) {
   fastify.route({
     method: 'GET',
@@ -51,7 +53,38 @@ module.exports = function (fastify, opts, next) {
             type: 'string'
           },
           schema: {
-            type: 'object'
+            type: 'object',
+            required: ['required', 'properties'],
+            properties: {
+              required: {
+                type: 'array',
+                items: { type: 'string' },
+                uniqueItem: true,
+                default: ['name']
+              },
+              properties: {
+                type: 'object',
+                required: ['name'],
+                properties: {
+                  name: {
+                    type: 'object',
+                    required: ['type', 'title'],
+                    properties: {
+                      type: {
+                        type: 'string',
+                        enum: ['string']
+                      },
+                      title: {
+                        type: 'string'
+                      },
+                      default: {
+                        type: 'string'
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         required: ['_id', 'schema']
@@ -77,10 +110,20 @@ module.exports = function (fastify, opts, next) {
         type: 'object',
         properties: {
           schema: {
-            type: 'object'
+            type: 'object',
+            properties: {
+              'title': {
+                'type': 'string'
+              },
+              'description': {
+                'type': 'string'
+              },
+              properties: {
+                type: 'object'
+              }
+            }
           }
-        },
-        required: ['schema']
+        }
       }
     },
     handler: async function (req, reply) {

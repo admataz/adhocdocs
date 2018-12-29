@@ -36,18 +36,18 @@ const schema = {
   }
 }
 
-module.exports = (f, options, next) => {
-  const { db, ObjectId } = f.mongo
-  f.decorate('docsDb', dbConnector(db, DOCUMENTS_COLLECTION_NAME))
-  f.register(fileUpload)
+module.exports = (fastify, options, next) => {
+  const { db, ObjectId } = fastify.mongo
+  fastify.decorate('docsDb', dbConnector(db, DOCUMENTS_COLLECTION_NAME))
+  fastify.register(fileUpload)
   try {
-    f.docsDb.initDocumentsCollection()
+    fastify.docsDb.initDocumentsCollection()
   } catch (error) {
     throw (error)
   }
 
   // abstract the mongo-ness away a little
-  f.decorate('dbUtils', {
+  fastify.decorate('dbUtils', {
     dbid: i => ObjectId(i)
   })
 
@@ -68,7 +68,7 @@ module.exports = (f, options, next) => {
    * TODO: add search/filter parameters
    * TODO: add summaryOnly parameter
    */
-  f.route({
+  fastify.route({
     method: 'GET',
     url: '/',
     handler: async function (req, reply) {
@@ -77,7 +77,7 @@ module.exports = (f, options, next) => {
       // const searchfields = req.query.search ? req.query.search.split(',') : fields
       // const q = req.query.q ? searchfields.map(f => ( { f : {$regex:req.query.q} })) : [{}]
       // const q = [{}]
-        const docs = await f.docsDb.getDocumentList({})
+        const docs = await fastify.docsDb.getDocumentList({})
         return reply.send(docs)
       } catch (error) {
         return reply.send(error)
@@ -91,7 +91,7 @@ module.exports = (f, options, next) => {
    * TODO: add search/filter parameters
    * TODO: add summaryOnly parameter
    */
-  f.route({
+  fastify.route({
     method: 'GET',
     url: '/:schemaName',
     handler: async function (req, reply) {
@@ -100,7 +100,7 @@ module.exports = (f, options, next) => {
       // const searchfields = req.query.search ? req.query.search.split(',') : fields
       // const q = req.query.q ? searchfields.map(f => ( { f : {$regex:req.query.q} })) : [{}]
       // const q = [{}]
-        const docs = await f.docsDb.getDocumentList({ schema: req.params.schemaName })
+        const docs = await fastify.docsDb.getDocumentList({ schema: req.params.schemaName })
         return reply.send(docs)
       } catch (error) {
         return reply.send(error)
@@ -111,12 +111,12 @@ module.exports = (f, options, next) => {
   /**
    * GET a single item by the slug id
    */
-  f.route({
+  fastify.route({
     method: 'GET',
     url: '/:schemaName/:slug',
     handler: async function (req, reply) {
       try {
-        const doc = await f.docsDb.getDocument({ slug: req.params.slug, schema: req.params.schemaName })
+        const doc = await fastify.docsDb.getDocument({ slug: req.params.slug, schema: req.params.schemaName })
         if (!doc) {
           return reply.send(httpErrors.NotFound())
         }
@@ -130,13 +130,13 @@ module.exports = (f, options, next) => {
   /**
    * GET a one or more items by the database ids
    */
-  f.route({
+  fastify.route({
     method: 'GET',
     url: '/collection/:ids',
     handler: async function (req, reply) {
       try {
-        const ids = req.params.ids.split(',').map(id => f.dbUtils.dbid(id))
-        const doc = await f.docsDb.getDocumentList({ _id: { $in: ids } })
+        const ids = req.params.ids.split(',').map(id => fastify.dbUtils.dbid(id))
+        const doc = await fastify.docsDb.getDocumentList({ _id: { $in: ids } })
         if (!doc) {
           return reply.send(httpErrors.NotFound())
         }
@@ -150,12 +150,12 @@ module.exports = (f, options, next) => {
   /**
    * DELETE an item
    */
-  f.route({
+  fastify.route({
     method: 'DELETE',
     url: '/:schemaName/:slug',
     handler: async function (req, reply) {
       try {
-        const doc = await f.docsDb.deleteDocument({ slug: req.params.slug, schema: req.params.schemaName })
+        const doc = await fastify.docsDb.deleteDocument({ slug: req.params.slug, schema: req.params.schemaName })
         return reply.send(doc)
       } catch (error) {
         return reply.send(error)
@@ -166,7 +166,7 @@ module.exports = (f, options, next) => {
   /**
    * POST and create a new item
    */
-  f.route({
+  fastify.route({
     method: 'POST',
     url: '/:schemaName',
     schema,
@@ -178,7 +178,7 @@ module.exports = (f, options, next) => {
           schema: req.params.schemaName,
           slug: slugify(req.body.slug || req.body.content.title)
         }
-        const dbresult = await f.docsDb.insertDocument(doc)
+        const dbresult = await fastify.docsDb.insertDocument(doc)
         return reply.code(201).send(dbresult)
       } catch (error) {
         return reply.send(error)
@@ -189,7 +189,7 @@ module.exports = (f, options, next) => {
   /**
    * PUT and replace a new item
    */
-  f.route({
+  fastify.route({
     method: 'PUT',
     url: '/:schemaName/:slug',
     schema: {
@@ -223,7 +223,7 @@ module.exports = (f, options, next) => {
           slug: slugify(req.body.slug || req.params.slug)
         }
 
-        const dbresult = await f.docsDb.updateDocument({ slug: req.params.slug, schema: req.params.schemaName }, doc)
+        const dbresult = await fastify.docsDb.updateDocument({ slug: req.params.slug, schema: req.params.schemaName }, doc)
         return reply.code(201).send(dbresult)
       } catch (error) {
         return reply.send(error)
@@ -234,7 +234,7 @@ module.exports = (f, options, next) => {
   /**
    * PUT  update an existing item
    */
-  f.route({
+  fastify.route({
     method: 'PATCH',
     url: '/:schemaName/:slug',
     schema: {
@@ -262,7 +262,7 @@ module.exports = (f, options, next) => {
     handler: async function (req, reply) {
       try {
         const updateObj = Object.assign(req.body, { slug: slugify(req.body.slug || req.params.slug) })
-        const result = await f.docsDb.patchDocument({ slug: req.params.slug, schema: req.params.schemaName }, updateObj)
+        const result = await fastify.docsDb.patchDocument({ slug: req.params.slug, schema: req.params.schemaName }, updateObj)
         return reply.send(result)
       } catch (error) {
         return reply.send(error)
@@ -270,7 +270,7 @@ module.exports = (f, options, next) => {
     }
   })
 
-  f.route({
+  fastify.route({
     method: 'POST',
     url: '/:schemaName/upload',
     handler: async function (req, reply) {

@@ -1,39 +1,16 @@
-const { fastify, init } = require('../server')
+const request = require('request')
 const { expect } = require('chai')
+const testSchema = require('./fixtures/schema')
+const { server: config } = require('../server/config')
 
-describe('create new schema', () => {
-  it('should create a new schema', () => {
-    const sampleSchema = {
-      'type': 'object',
-      'title': 'SimpleItem',
-      'properties': {
-        'name': {
-          'type': 'string',
-          'title': 'Name'
-        },
-        'description': {
-          'type': 'string',
-          'title': 'Descripiton',
-          'default': ''
-        }
-      },
-      'required': ['name']
-    }
-    init()
+const baseUrl = `http://localhost:${config.port}`
 
-    fastify.inject({
-      url: '/api/v1/schema',
-      method: 'POST',
-      payload: {
-        _id: 'SimpleSchema',
-        schema: sampleSchema
-      }
-    }, (err, res) => {
-      if (err) {
-        console.log(err.message)
-      }
-      expect(res.statusCode).equal(200)
-      // console.log(res)
+describe.only('create new schema', () => {
+  it('should create a new schema', done => {
+    request.post({ url: `${baseUrl}/api/v1/schema`, body: testSchema, json: true }, (err, res, body) => {
+      if (err) throw (err)
+      expect(res.statusCode).equal(201)
+      done()
     })
   })
 })

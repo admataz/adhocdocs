@@ -2,7 +2,8 @@ require('dotenv').config()
 
 const conf = {
   db: {
-    connect: process.env.DB_CONNECT || 'mongodb://localhost/adhocdocs',
+    connect: process.env.DB_CONNECT || 'mongodb://localhost/',
+    dbName: process.env.DB_NAME || 'adhocdocs',
     collections: {
       schema: process.env.DB_COLLECTION_NAME_SCHEMA || 'schema',
       documents: process.env.DB_COLLECTION_NAME_DOCUMENTS || 'documents'

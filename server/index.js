@@ -9,7 +9,7 @@ const server = require('./server')
 
 function init () {
   fastify.register(fastifyMongoDb, {
-    url: config.db.connect,
+    url: `${config.db.connect}/${config.db.dbName}`,
     useNewUrlParser: true
   })
 
