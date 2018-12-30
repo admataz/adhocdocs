@@ -8,8 +8,9 @@
  * TODO: add a UI property for the integration of ReactJSON Schema form UI
  *
  */
+const httpErrors = require('http-errors')
 
-// const schemaschema = require('./validate-schema')
+const schemaschema = require('./schemaSchema')
 
 module.exports = function (fastify, opts, next) {
   fastify.route({
@@ -34,7 +35,10 @@ module.exports = function (fastify, opts, next) {
       const { db } = fastify.mongo
       try {
         const collection = await db.collection('schema')
-        const doc = await collection.find({ _id: req.params.schema }).toArray()
+        const doc = await collection.findOne({ _id: req.params.schema })
+        if (!doc) {
+          return reply.send(httpErrors.NotFound())
+        }
         reply.send(doc)
       } catch (error) {
         return reply.send(error)
@@ -46,49 +50,7 @@ module.exports = function (fastify, opts, next) {
     method: 'POST',
     url: '/',
     schema: {
-      body: {
-        type: 'object',
-        properties: {
-          _id: {
-            type: 'string'
-          },
-          schema: {
-            type: 'object',
-            required: ['required', 'properties'],
-            properties: {
-              required: {
-                type: 'array',
-                items: { type: 'string' },
-                uniqueItem: true,
-                default: ['name']
-              },
-              properties: {
-                type: 'object',
-                required: ['name'],
-                properties: {
-                  name: {
-                    type: 'object',
-                    required: ['type', 'title'],
-                    properties: {
-                      type: {
-                        type: 'string',
-                        enum: ['string']
-                      },
-                      title: {
-                        type: 'string'
-                      },
-                      default: {
-                        type: 'string'
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        required: ['_id', 'schema']
-      }
+      body: schemaschema
     },
     handler: async function (req, reply) {
       const { db } = fastify.mongo
@@ -106,35 +68,16 @@ module.exports = function (fastify, opts, next) {
     method: 'PUT',
     url: '/:schema',
     schema: {
-      body: {
-        type: 'object',
-        properties: {
-          schema: {
-            type: 'object',
-            properties: {
-              'title': {
-                'type': 'string'
-              },
-              'description': {
-                'type': 'string'
-              },
-              properties: {
-                type: 'object'
-              }
-            }
-          }
-        }
-      }
+      body: schemaschema.schema
     },
     handler: async function (req, reply) {
       const { db } = fastify.mongo
       try {
         const collection = await db.collection('schema')
-        const response = await collection.findAndModify(
+        const response = await collection.findOneAndUpdate(
           { _id: req.params.schema },
-          [],
-          req.body,
-          { new: true })
+          { $set: { schema: req.body } },
+          { returnOriginal: false })
         return reply.send(response)
       } catch (error) {
         return reply.send(error)

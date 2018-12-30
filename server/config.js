@@ -10,7 +10,10 @@ const conf = {
     }
   },
   server: {
-    logging: process.env.LOG_LEVEL ? { level: process.env.LOG_LEVEL } : false,
+    logging: process.env.LOG_LEVEL ? {
+      level: process.env.LOG_LEVEL,
+      prettyPrint: process.env.LOG_LEVEL === 'debug'
+    } : false,
     port: process.env.PORT || '3001'
   }
 }

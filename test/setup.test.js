@@ -2,24 +2,27 @@ const server = require('../server')
 const mongodb = require('mongodb').MongoClient
 const config = require('../server/config')
 
-before(async function () {
+before(function (done) {
   console.log('test suite started...')
   server.init()
   server.start()
+  done()
 })
 
-after(function () {
+after(function (done) {
   console.log('...test suite ended')
   server.close()
+  done()
 })
 
-beforeEach(function () {
-  mongodb.connect(config.db.connect, async (err, client) => {
+beforeEach(function (done) {
+  mongodb.connect(config.db.connect, { useNewUrlParser: true }, async (err, client) => {
     if (err) throw (err)
     const db = client.db(config.db.dbName)
-    await db.collection(config.db.collections.documents).remove({})
-    await db.collection(config.db.collections.schema).remove({})
+    await db.collection(config.db.collections.documents).deleteMany({})
+    await db.collection(config.db.collections.schema).deleteMany({})
     client.close()
+    done()
   })
 
 })
