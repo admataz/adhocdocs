@@ -2,20 +2,20 @@ const server = require('../server')
 const mongodb = require('mongodb').MongoClient
 const config = require('../server/config')
 
-before(function (done) {
+before(done => {
   console.log('test suite started...')
   server.init()
-  server.start()
-  done()
+  server.start(done)
+  // done()
 })
 
-after(function (done) {
+after(done => {
   console.log('...test suite ended')
   server.close()
   done()
 })
 
-beforeEach(function (done) {
+beforeEach(done => {
   mongodb.connect(config.db.connect, { useNewUrlParser: true }, async (err, client) => {
     if (err) throw (err)
     const db = client.db(config.db.dbName)
@@ -24,5 +24,4 @@ beforeEach(function (done) {
     client.close()
     done()
   })
-
 })

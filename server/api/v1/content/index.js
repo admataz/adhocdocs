@@ -9,36 +9,34 @@ const slugify = require('@sindresorhus/slugify')
 const papaparse = require('papaparse')
 const fileUpload = require('fastify-file-upload')
 
-const { db: { collections: { documents: DOCUMENTS_COLLECTION_NAME } } } = require('../../../config')
+const { db: { collections: { documents: DOCUMENTS_COLLECTION_NAME, schema: SCHEMA_COLLECTION_NAME } } } = require('../../../config')
 const dbConnector = require('./queries')
 
-const schema = {
-  body: {
-    type: 'object',
-    properties: {
-      content: {
-        type: 'object',
-        properties: {
-          title: {
-            type: 'string'
-          }
-        },
-        required: ['title']
+const docSchema = {
+  type: 'object',
+  properties: {
+    content: {
+      type: 'object',
+      properties: {
+        title: {
+          type: 'string'
+        }
       },
-      related: {
-        type: 'array'
-      },
-      slug: {
-        type: 'string'
-      }
+      required: ['title']
     },
-    required: ['content']
-  }
+    related: {
+      type: 'array'
+    },
+    slug: {
+      type: 'string'
+    }
+  },
+  required: ['content']
 }
 
 module.exports = (fastify, options, next) => {
   const { db, ObjectId } = fastify.mongo
-  fastify.decorate('docsDb', dbConnector(db, DOCUMENTS_COLLECTION_NAME))
+  fastify.decorate('docsDb', dbConnector(db, DOCUMENTS_COLLECTION_NAME, SCHEMA_COLLECTION_NAME))
   fastify.register(fileUpload)
   try {
     fastify.docsDb.initDocumentsCollection()
@@ -101,7 +99,7 @@ module.exports = (fastify, options, next) => {
       // const q = req.query.q ? searchfields.map(f => ( { f : {$regex:req.query.q} })) : [{}]
       // const q = [{}]
         const docs = await fastify.docsDb.getDocumentList({ schema: req.params.schemaName })
-        return reply.send(docs)
+        return reply.send({ data: docs })
       } catch (error) {
         return reply.send(error)
       }
@@ -120,7 +118,7 @@ module.exports = (fastify, options, next) => {
         if (!doc) {
           return reply.send(httpErrors.NotFound())
         }
-        return reply.send(doc)
+        return reply.send({ data: doc })
       } catch (error) {
         return reply.send(error)
       }
@@ -140,7 +138,7 @@ module.exports = (fastify, options, next) => {
         if (!doc) {
           return reply.send(httpErrors.NotFound())
         }
-        return reply.send(doc)
+        return reply.send({ data: doc })
       } catch (error) {
         return reply.send(error)
       }
@@ -169,7 +167,7 @@ module.exports = (fastify, options, next) => {
   fastify.route({
     method: 'POST',
     url: '/:schemaName',
-    schema,
+    schema: { body: docSchema },
     handler: async function (req, reply) {
       try {
         const doc = {
@@ -178,9 +176,45 @@ module.exports = (fastify, options, next) => {
           schema: req.params.schemaName,
           slug: slugify(req.body.slug || req.body.content.title)
         }
-        const dbresult = await fastify.docsDb.insertDocument(doc)
+        const dbresult = await fastify.docsDb.insertDocument(doc, req.params.schemaName)
         return reply.code(201).send(dbresult)
       } catch (error) {
+        if (error.message === 'SCHEMA_NOT_FOUND') {
+          return reply.send(httpErrors.BadRequest())
+        }
+        return reply.send(error)
+      }
+    }
+  })
+
+  /**
+   * POST and create a batch of new items
+   */
+  fastify.route({
+    method: 'POST',
+    url: '/:schemaName/batch',
+    schema: { body: {
+      type: 'array',
+      items: docSchema
+    } },
+    handler: async function (req, reply) {
+      try {
+        const results = await Promise.all(req.body.map(async (payload) => {
+          const doc = {
+            content: payload.content,
+            related: payload.related || [],
+            schema: req.params.schemaName,
+            slug: slugify(payload.slug || payload.content.title)
+          }
+          const dbresult = await fastify.docsDb.insertDocument(doc, req.params.schemaName)
+          return dbresult
+        }))
+
+        return reply.code(201).send({ data: results })
+      } catch (error) {
+        if (error.message === 'SCHEMA_NOT_FOUND') {
+          return reply.send(httpErrors.BadRequest())
+        }
         return reply.send(error)
       }
     }
